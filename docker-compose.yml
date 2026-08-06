@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: taskflow
+      POSTGRES_DB: taskflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskflow -d taskflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=taskflow;Username=taskflow;Password=taskflow"
+      # Demo signing key. In a real deployment this comes from a secret store, never source control.
+      Jwt__SigningKey: "super-secret-demo-signing-key-please-override-in-prod-32bytes+"
+      Jwt__Issuer: "taskflow-api"
+      Jwt__Audience: "taskflow-clients"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
