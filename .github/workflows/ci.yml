@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --verbosity minimal
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Integration tests spin up PostgreSQL via Testcontainers, which uses the
+      # Docker daemon available on GitHub-hosted runners out of the box.
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
