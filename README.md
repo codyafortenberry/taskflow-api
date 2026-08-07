@@ -40,12 +40,27 @@ The database is migrated and seeded automatically on startup.
 
 ## Try it in 30 seconds
 
+**Easiest — no terminal needed:**
+
+1. Open the board at http://localhost:8080/ and sign in (`admin@taskflow.dev` /
+   `Password123` is pre-filled).
+2. Click **Copy token** in the top bar — your JWT is now on the clipboard.
+3. Open http://localhost:8080/swagger, click **Authorize**, paste the token, and
+   use *Try it out* on any endpoint.
+
+**Or via the terminal:**
+
 ```bash
 # 1. Log in and capture the token
 TOKEN=$(curl -s http://localhost:8080/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@taskflow.dev","password":"Password123"}' \
   | sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p')
+
+# Optional — copy it straight to the clipboard:
+#   macOS:    echo -n "$TOKEN" | pbcopy
+#   Windows:  echo %TOKEN% | clip      (or `$TOKEN | clip` in PowerShell)
+#   Linux:    echo -n "$TOKEN" | xclip -selection clipboard
 
 # 2. List tasks
 curl -s http://localhost:8080/api/v1/tasks -H "Authorization: Bearer $TOKEN"
@@ -55,9 +70,6 @@ curl -s http://localhost:8080/api/v1/tasks \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"projectId":"<id>","title":"My first task","priority":"High"}'
 ```
-
-Or just open `/swagger`, click **Authorize**, paste the token, and use
-*Try it out* on any endpoint.
 
 ## Local development
 

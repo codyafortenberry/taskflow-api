@@ -79,6 +79,8 @@
       <div class="row" style="gap:14px">
         <span class="muted" id="whoami"></span>
         <a class="muted" href="/swagger" target="_blank">API docs</a>
+        <button class="ghost" id="copyTokenBtn" onclick="copyToken()"
+          title="Copy your JWT, then paste it into Swagger's Authorize dialog">Copy token</button>
         <button class="ghost" onclick="logout()">Sign out</button>
       </div>
     </header>
@@ -222,6 +224,40 @@
     async function changeStatus(id, status) {
       await api(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
       loadBoard();
+    }
+
+    async function copyToken() {
+      const btn = document.getElementById('copyTokenBtn');
+      if (!token) { flashButton(btn, 'No token'); return; }
+
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(token);
+        copied = true;
+      } catch {
+        copied = fallbackCopy(token); // older browsers / no async Clipboard API
+      }
+      flashButton(btn, copied ? 'Copied!' : 'Press ⌘/Ctrl+C');
+    }
+
+    function fallbackCopy(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch { return false; }
+    }
+
+    function flashButton(btn, message) {
+      btn.textContent = message;
+      setTimeout(() => { btn.textContent = 'Copy token'; }, 1500);
     }
 
     const createDialog = document.getElementById('createDialog');
