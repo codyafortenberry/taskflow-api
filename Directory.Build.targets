@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- Auto-installs Husky.Net git hooks on first local build, so contributors get
+       the pre-commit checks without a manual setup step. Skipped in CI (CI=true)
+       and in the Docker build (HUSKY=0); runs once, from the API project only. -->
+  <Target Name="HuskyInstall"
+          BeforeTargets="Restore;CollectPackageReferences"
+          Condition="'$(HUSKY)' != '0' and '$(CI)' != 'true' and '$(MSBuildProjectName)' == 'TaskFlow.Api'">
+    <Exec Command="dotnet tool restore"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
+          StandardOutputImportance="Low" StandardErrorImportance="High"
+          ContinueOnError="true" />
+    <Exec Command="dotnet husky install"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
+          StandardOutputImportance="Low" StandardErrorImportance="High"
+          ContinueOnError="true" />
+  </Target>
+
+</Project>

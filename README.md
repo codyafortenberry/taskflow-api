@@ -183,6 +183,20 @@ tests/TaskFlow.Api.Tests/
 
 See [CLAUDE.md](CLAUDE.md) for conventions and how to extend the codebase.
 
+## Code quality & tooling
+
+Guardrails that keep the codebase consistent:
+
+- **`.editorconfig` + `dotnet format`** — a single formatting/style ruleset,
+  enforced in CI and on commit.
+- **`Directory.Build.props`** — centralized analyzer settings with
+  **warnings-as-errors in Release**.
+- **Husky.Net pre-commit hook** — runs `dotnet format --verify-no-changes` and a
+  Release build before each commit (auto-installed on first build; no manual setup).
+- **GitHub Actions CI** — format-check → build → test on every push and PR.
+- **AI-assisted development** — [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md)
+  document the architecture and conventions for AI tools and humans alike.
+
 ## Configuration
 
 | Key | Purpose |

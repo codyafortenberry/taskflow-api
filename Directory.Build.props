@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- Settings shared by every project in the solution. -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Run the Roslyn code-style analyzers as part of the build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- Required for IDE0005 (remove unused usings) to run at build time.
+         CS1591 (missing XML doc comment) is suppressed — docs are opt-in. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Keep the build honest in CI/Release: no warnings allowed to slip through.
+         Left off in Debug so the local inner-dev loop isn't interrupted. -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

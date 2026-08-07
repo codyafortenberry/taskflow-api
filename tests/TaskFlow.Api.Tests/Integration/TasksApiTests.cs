@@ -8,7 +8,6 @@ using TaskFlow.Api.Contracts.Common;
 using TaskFlow.Api.Contracts.Projects;
 using TaskFlow.Api.Contracts.Tasks;
 using TaskFlow.Api.Domain.Enums;
-using Xunit;
 
 namespace TaskFlow.Api.Tests.Integration;
 

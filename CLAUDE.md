@@ -69,9 +69,25 @@ dotnet run --project src/TaskFlow.Api        # http://localhost:5288
 # Tests (unit + integration; integration needs a running Docker daemon)
 dotnet test
 
+# Format the code (also enforced by the pre-commit hook and CI)
+dotnet format
+
 # Add a migration after changing entities or the DbContext
 dotnet ef migrations add <Name> --project src/TaskFlow.Api --output-dir Data/Migrations
 ```
+
+## Code quality & tooling
+
+- **`.editorconfig`** defines formatting and code-style rules; **`dotnet format`**
+  applies/verifies them. CI fails on unformatted code.
+- **`Directory.Build.props`** centralizes settings for all projects: nullable,
+  implicit usings, Roslyn analyzers (`EnforceCodeStyleInBuild`), and
+  **warnings-as-errors in Release**. Keep the build clean.
+- **Husky.Net** installs a **pre-commit hook** (`.husky/`) that runs
+  `dotnet format --verify-no-changes` and a Release build. It bootstraps itself on
+  first local build (`Directory.Build.targets`); skipped in CI and Docker.
+- **CI** (`.github/workflows/ci.yml`) runs format-check → build → test on every
+  push and PR.
 
 Docs: Swagger UI at `/swagger`, raw spec at `/swagger/v1/swagger.json`,
 health check at `/health`, the board UI at `/`.
