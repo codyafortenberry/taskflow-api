@@ -12,14 +12,20 @@ Built with **.NET 10**, **PostgreSQL** (EF Core), **JWT auth**, an
 
 ---
 
-## Quick start (one command)
+## Quick start
 
-Requires Docker.
+**Only prerequisite: Docker.** No .NET SDK or PostgreSQL install needed — the
+container has everything.
+
+One line, from clone to a running app:
 
 ```bash
-docker compose up --build
+git clone https://github.com/codyafortenberry/taskflow-api.git && cd taskflow-api && docker compose up --build
 ```
 
+(Already cloned? Just `docker compose up --build`.)
+
+That builds the API, starts PostgreSQL, applies migrations, and seeds demo data.
 Then open:
 
 | What | URL |
@@ -165,23 +171,50 @@ Errors use [RFC 9457 Problem Details], including validation errors:
 
 ## Project structure
 
+Every request follows one straight, predictable path — easy to trace and easy to change:
+
+```
+HTTP  →  Controller  →  Service  →  EF Core (AppDbContext)  →  PostgreSQL
+         (thin)         (logic +      (data access)
+                        auth checks)
+```
+
 ```
 src/TaskFlow.Api/
-  Controllers/      Thin HTTP endpoints
-  Services/         Business logic + data access (interface + impl per feature)
-  Contracts/        Request/response DTOs (records) + PagedResponse
-  Domain/           Entities and enums
-  Data/             AppDbContext, migrations, seeder
+  Controllers/      Thin HTTP endpoints — bind input, call a service, return a result
+  Services/         Business logic + data access (one interface + impl per feature)
+  Contracts/        Request/response DTOs as records; entities never cross this boundary
+  Domain/           Entities and enums (no framework concerns)
+  Data/             AppDbContext, EF Core migrations, demo-data seeder
   Infrastructure/   Auth (JWT, hashing, current user), error handling, validation filter
-  Validation/       FluentValidation validators
+  Validation/       FluentValidation validators (one per request DTO)
   Options/          Strongly-typed, validated configuration
-  wwwroot/          Minimal single-page board UI
+  wwwroot/          Minimal single-page board UI (served at /)
 tests/TaskFlow.Api.Tests/
-  Unit/             Fast, no I/O
+  Unit/             Fast, no I/O (password hashing, JWT, validators)
   Integration/      Real API + PostgreSQL via Testcontainers
 ```
 
-See [CLAUDE.md](CLAUDE.md) for conventions and how to extend the codebase.
+### Where to make a change
+
+| To… | Touch (in order) |
+| --- | --- |
+| Add a field to a task | `Domain/Entities/TaskItem.cs` → migration → `Contracts/Tasks/` → `Validation/` → `Services/TaskService.cs` |
+| Add an endpoint | `Services/*Service.cs` (logic) → `Controllers/*Controller.cs` (thin wrapper) |
+| Add a new entity | `Domain/` → `AppDbContext` → migration → `Contracts/` → `Validation/` → `Services/` → `Controllers/` |
+| Change a validation rule | `Validation/` |
+| Change who can do what | `ICurrentUser` checks in the relevant service; `[Authorize]` on the controller |
+| Change an error's status/shape | `Infrastructure/Errors/` |
+| Change pagination limits | `Contracts/Common/PaginationParameters.cs` |
+| Change config or secrets | `appsettings*.json` / environment variables |
+
+Add a migration after changing an entity or the `AppDbContext`:
+
+```bash
+dotnet ef migrations add <Name> --project src/TaskFlow.Api --output-dir Data/Migrations
+```
+
+See [CLAUDE.md](CLAUDE.md) for the full conventions and extension checklist.
 
 ## Code quality & tooling
 
