@@ -16,9 +16,9 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<UserResponse>>> List(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        [FromQuery] PaginationParameters pagination, CancellationToken ct)
     {
-        var response = await userService.ListAsync(NormalizePage(page), NormalizePageSize(pageSize), ct);
+        var response = await userService.ListAsync(pagination.Page, pagination.PageSize, ct);
         return Ok(response);
     }
 
@@ -31,7 +31,4 @@ public sealed class UsersController(IUserService userService) : ControllerBase
         var response = await userService.GetAsync(id, ct);
         return Ok(response);
     }
-
-    private static int NormalizePage(int page) => page < 1 ? 1 : page;
-    private static int NormalizePageSize(int pageSize) => Math.Clamp(pageSize, 1, 100);
 }

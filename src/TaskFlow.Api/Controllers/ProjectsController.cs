@@ -16,10 +16,9 @@ public sealed class ProjectsController(IProjectService projectService) : Control
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<ProjectResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<ProjectResponse>>> List(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        [FromQuery] PaginationParameters pagination, CancellationToken ct)
     {
-        var response = await projectService.ListAsync(
-            page < 1 ? 1 : page, Math.Clamp(pageSize, 1, 100), ct);
+        var response = await projectService.ListAsync(pagination.Page, pagination.PageSize, ct);
         return Ok(response);
     }
 
