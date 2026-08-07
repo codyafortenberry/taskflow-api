@@ -124,7 +124,7 @@
     ];
     let token = localStorage.getItem('tf_token');
     let me = JSON.parse(localStorage.getItem('tf_user') || 'null');
-    let projectId = null, users = [];
+    let projectId = null, users = [], tasks = [];
 
     async function api(path, options = {}) {
       const res = await fetch('/api/v1' + path, {
@@ -188,18 +188,27 @@
     let timer;
     function debouncedLoad() { clearTimeout(timer); timer = setTimeout(loadBoard, 250); }
 
+    // Fetches the board from the server. Called on load, on search, and after
+    // creating a task — i.e. when the whole list may have changed.
     async function loadBoard() {
       const search = document.getElementById('search').value.trim();
       const q = new URLSearchParams({ pageSize: '100' });
       if (projectId) q.set('projectId', projectId);
       if (search) q.set('search', search);
       const data = await api('/tasks?' + q.toString());
+      tasks = data.items;
+      renderBoard();
+    }
+
+    // Renders columns from the in-memory `tasks` array — no network call.
+    function renderBoard() {
       const board = document.getElementById('board');
       board.innerHTML = COLUMNS.map(col => {
-        const cards = data.items.filter(t => t.status === col.key).map(renderCard).join('');
+        const inColumn = tasks.filter(t => t.status === col.key);
+        const cards = inColumn.map(renderCard).join('');
         return `<div class="col">
           <h3><span class="dot" style="background:${col.color}"></span>${col.label}
-            <span class="muted" style="margin-left:auto">${data.items.filter(t => t.status === col.key).length}</span>
+            <span class="muted" style="margin-left:auto">${inColumn.length}</span>
           </h3>${cards || '<p class="muted" style="margin:6px;font-size:12px">No tasks</p>'}</div>`;
       }).join('');
     }
@@ -222,8 +231,13 @@
     }
 
     async function changeStatus(id, status) {
-      await api(`/tasks/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
-      loadBoard();
+      // PATCH returns the updated task, so we update local state from the response
+      // and re-render — no follow-up GET needed.
+      const updated = await api(`/tasks/${id}/status`, {
+        method: 'PATCH', body: JSON.stringify({ status }),
+      });
+      tasks = tasks.map(t => (t.id === updated.id ? updated : t));
+      renderBoard();
     }
 
     async function copyToken() {
